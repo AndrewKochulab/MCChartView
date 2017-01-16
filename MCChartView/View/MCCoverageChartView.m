@@ -14,7 +14,7 @@
 #define COVERAGE_INFO_WIDTH 16.0
 #define COVERAGE_INFO_HEIGHT 16.0
 #define COVERAGE_INFO_PADDING 16.0
- 
+
 @interface MCCoverageChartView ()
 
 @property (nonatomic, assign) NSInteger numberOfCoverage;
@@ -71,7 +71,7 @@
     }
     
     CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextSetStrokeColorWithColor(context, [UIColor grayColor].CGColor);
+    CGContextSetStrokeColorWithColor(context, [UIColor colorWithWhite:0.92 alpha:1].CGColor);
     CGContextAddArc(context, _centerPoint.x, _centerPoint.y, _maxRadius, 0, 2 * M_PI, 0);
     CGContextStrokePath(context);
     
@@ -109,7 +109,22 @@
 
 - (void)reloadDataWithAnimate:(BOOL)animate {
     [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    
+    NSArray *sublayers = [NSArray arrayWithArray:self.layer.sublayers];
+    
     [self.layer.sublayers makeObjectsPerformSelector:@selector(removeFromSuperlayer)];
+    
+    for (CALayer *sublayer in sublayers)
+    {
+        if ([sublayer isKindOfClass:[CAShapeLayer class]])
+        {
+            CGColorRef borderLineColorRef = [UIColor colorWithWhite:0.92 alpha:1].CGColor;
+            CGColorRef sublayerLineColorRef = ((CAShapeLayer *) sublayer).strokeColor;
+            
+            if (CGColorEqualToColor(borderLineColorRef, sublayerLineColorRef))
+                [self.layer addSublayer:sublayer];
+        }
+    }
     
     NSAssert([self.dataSource respondsToSelector:@selector(numberOfCoverageInCoverageChartView:)], @"You must implemetation the 'numberOfCoverageInCoverageChartView:' method");
     NSAssert([self.dataSource respondsToSelector:@selector(coverageChartView:valueOfCoverageAtIndex:)], @"You must implemetation the 'coverageChartView:valueOfCoverageAtIndex:' method");
@@ -145,7 +160,7 @@
         
         startAngle = endAngle;
     }
-
+    
     if ([self.delegate respondsToSelector:@selector(centerViewInCoverageChartView:)] && _minRadius != 0) {
         UIView *view = [self.delegate centerViewInCoverageChartView:self];
         CGFloat scale = MAX(CGRectGetWidth(view.bounds), CGRectGetHeight(view.bounds))/_minRadius;
